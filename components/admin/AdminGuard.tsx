@@ -47,14 +47,17 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         <div className="wrap">
           <h1>Falta configurar Firebase</h1>
           <p className="lead" style={{ marginTop: 16, maxWidth: "52ch" }}>
-            El panel administrador usa Firebase Authentication, Firestore y Storage. Copiá{" "}
-            <code>.env.example</code> a <code>.env.local</code>, pegá las claves del proyecto y
-            recargá.
+            El panel usa Firebase Authentication y Firestore, y Cloudinary para las imágenes. Copiá{" "}
+            <code>.env.example</code> a <code>.env.local</code>, pegá las claves y recargá.
           </p>
           <ol style={{ lineHeight: 1.7, color: "var(--ink-soft)", paddingLeft: 18 }}>
-            <li>Creá un proyecto en Firebase y habilitá Email/Password, Firestore y Storage.</li>
-            <li>Desplegá las reglas de <code>firestore.rules</code> y <code>storage.rules</code>.</li>
+            <li>Creá un proyecto en Firebase y habilitá Email/Password y Firestore.</li>
+            <li>Desplegá las reglas de <code>firestore.rules</code>.</li>
             <li>Creá el usuario administrador en Authentication.</li>
+            <li>
+              En Cloudinary, creá un upload preset unsigned y cargá{" "}
+              <code>NEXT_PUBLIC_CLOUDINARY_*</code>.
+            </li>
             <li>En Vercel, cargá las mismas variables de entorno y volvé a desplegar.</li>
           </ol>
         </div>

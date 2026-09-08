@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const ALLOWED_HOSTS = [
+  "res.cloudinary.com",
   "firebasestorage.googleapis.com",
   "firebasestorage.app",
 ];
 
 function isAllowed(url: URL) {
-  return (
-    ALLOWED_HOSTS.some((host) => url.hostname === host || url.hostname.endsWith(`.${host}`)) ||
-    url.hostname.endsWith("firebasestorage.app")
+  return ALLOWED_HOSTS.some(
+    (host) => url.hostname === host || url.hostname.endsWith(`.${host}`),
   );
 }
 

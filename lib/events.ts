@@ -12,12 +12,13 @@ import {
   updateDoc,
   type Unsubscribe,
 } from "firebase/firestore";
-import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { DEMO_EVENTS } from "./demo-events";
-import { getFirebaseDb, getFirebaseStorage, isFirebaseConfigured } from "./firebase";
+import { getFirebaseDb, isFirebaseConfigured } from "./firebase";
 import { isUpcoming } from "./format";
 import { isSectorId } from "./sectors";
 import type { ChurchEvent, EventInput, SectorId } from "./types";
+
+export { MAX_IMAGE_BYTES, uploadEventImage } from "./cloudinary";
 
 const COLLECTION = "events";
 
@@ -120,23 +121,6 @@ export async function updateEvent(id: string, input: EventInput): Promise<void> 
   });
 }
 
-export async function removeEvent(id: string, imageUrl?: string | null): Promise<void> {
+export async function removeEvent(id: string): Promise<void> {
   await deleteDoc(doc(getFirebaseDb(), COLLECTION, id));
-  if (imageUrl) {
-    try {
-      await deleteObject(ref(getFirebaseStorage(), imageUrl));
-    } catch {
-      // The stored value is a download URL, not a storage path. Best-effort path delete below.
-    }
-  }
 }
-
-export async function uploadEventImage(file: File, eventKey: string): Promise<string> {
-  const safeName = file.name.replace(/[^\w.\-]+/g, "-").toLowerCase();
-  const path = `events/${eventKey}/${Date.now()}-${safeName}`;
-  const storageRef = ref(getFirebaseStorage(), path);
-  await uploadBytes(storageRef, file, { contentType: file.type });
-  return getDownloadURL(storageRef);
-}
-
-export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;

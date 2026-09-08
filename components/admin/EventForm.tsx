@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import { isCloudinaryConfigured } from "@/lib/cloudinary";
 import { createEvent, MAX_IMAGE_BYTES, updateEvent, uploadEventImage } from "@/lib/events";
 import { toDatetimeLocal } from "@/lib/format";
 import { SECTOR_LIST } from "@/lib/sectors";
@@ -43,6 +44,11 @@ export function EventForm({ event }: Props) {
     try {
       if (file && file.size > MAX_IMAGE_BYTES) {
         throw new Error("La imagen no puede superar 5 MB.");
+      }
+      if (file && !isCloudinaryConfigured()) {
+        throw new Error(
+          "Falta configurar Cloudinary (NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME y NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET).",
+        );
       }
       const payload: EventInput = {
         title,
