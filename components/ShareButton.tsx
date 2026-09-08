@@ -183,8 +183,8 @@ function ShareModal({
       >
         <h3 id="share-title">Compartir evento</h3>
         <p className="hint">
-          Descargá la tarjeta o copiá el enlace. En WhatsApp, el enlace muestra título, fecha e imagen
-          del evento.
+          Lo más fácil para WhatsApp: copiá el enlace. También podés bajar la tarjeta o copiar el texto
+          completo.
         </p>
         <div className="share-preview">
           {preview ? (
@@ -194,16 +194,19 @@ function ShareModal({
           )}
         </div>
         <div className="modal-actions">
-          <button type="button" className="btn btn-primary" onClick={download} disabled={!blob}>
-            Descargar tarjeta
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={copyLink}>
+          <button type="button" className="btn btn-primary modal-action-main" onClick={copyLink}>
             Copiar enlace
           </button>
-          <button type="button" className="btn btn-ghost" onClick={copyText}>
-            Copiar texto
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={onClose}>
+          <p className="modal-action-note">Ideal para WhatsApp: muestra título, fecha e imagen</p>
+          <div className="modal-actions-secondary">
+            <button type="button" className="btn btn-secondary" onClick={download} disabled={!blob}>
+              Descargar
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={copyText}>
+              Copiar texto
+            </button>
+          </div>
+          <button type="button" className="modal-dismiss" onClick={onClose}>
             Cerrar
           </button>
         </div>

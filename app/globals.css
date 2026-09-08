@@ -300,6 +300,17 @@ nav.wrap {
   border-color: var(--ink);
 }
 
+.btn-secondary {
+  background: #fff;
+  color: var(--teal-dark);
+  border-color: var(--line-bold);
+}
+
+.btn-secondary:hover {
+  border-color: var(--teal-dark);
+  background: #f3f7f5;
+}
+
 .btn-danger {
   background: var(--brick);
   color: #fff;
@@ -1035,8 +1046,51 @@ footer {
 
 .modal-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 10px;
+}
+
+.modal-action-main {
+  width: 100%;
+}
+
+.modal-action-note {
+  margin: -2px 0 4px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.modal-actions-secondary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.modal-actions-secondary .btn {
+  width: 100%;
+  font-size: 14px;
+  padding: 11px 14px;
+}
+
+.modal-dismiss {
+  margin-top: 4px;
+  align-self: center;
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.modal-dismiss:hover {
+  color: var(--ink);
 }
 
 .admin-shell {
