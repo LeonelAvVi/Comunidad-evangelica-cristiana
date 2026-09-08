@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SECTOR_LIST } from "@/lib/sectors";
+import { BrandMark } from "./BrandMark";
 import { Reveal } from "./Reveal";
 
 export function SectorsGrid() {
@@ -16,8 +17,8 @@ export function SectorsGrid() {
             <Reveal key={sector.id}>
               <Link href={`/sectores/${sector.slug}`} className="sector-card">
                 <span className="bar" style={{ background: sector.color }} />
-                <div className="glyph" style={{ background: sector.color }}>
-                  {sector.glyph}
+                <div className="glyph glyph-logo">
+                  <BrandMark width={44} height={44} alt="" />
                 </div>
                 <h3>{sector.name}</h3>
                 <p>{sector.tagline}</p>

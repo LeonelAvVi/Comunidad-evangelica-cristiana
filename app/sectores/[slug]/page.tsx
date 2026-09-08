@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BrandMark } from "@/components/BrandMark";
 import { EventsFeed } from "@/components/EventsFeed";
 import { isSectorId, SECTORS } from "@/lib/sectors";
 
@@ -58,7 +59,9 @@ export default async function SectorPage({ params }: Props) {
                   </div>
                 ) : null}
               </div>
-              <div className="glyph">{sector.glyph}</div>
+              <div className="glyph glyph-logo">
+                <BrandMark width={72} height={72} alt="" />
+              </div>
             </div>
           </div>
         </div>

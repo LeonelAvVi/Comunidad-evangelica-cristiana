@@ -11,6 +11,17 @@ function canUseNativeShare() {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
+function shareMessage(event: ChurchEvent, url: string) {
+  return [
+    event.title,
+    formatShareDate(event.startsAt, event.location),
+    "",
+    event.description,
+    "",
+    url,
+  ].join("\n");
+}
+
 async function getShareFiles(event: ChurchEvent): Promise<File[]> {
   if (!event.imageUrl) return [];
   try {
@@ -33,16 +44,26 @@ export function ShareButton({ event }: { event: ChurchEvent }) {
 
   async function onShare() {
     const url = eventPermalink(event.id);
-    const text = `${event.description}\n${formatShareDate(event.startsAt, event.location)}`;
+    const text = shareMessage(event, url);
     const title = `${event.title} — Comunidad Cristiana`;
 
     if (canUseNativeShare()) {
       try {
-        const files = await getShareFiles(event);
+        // WhatsApp suele ignorar title/text si mandamos files; priorizamos el enlace con preview OG.
         const payload: ShareData = { title, text, url };
-        if (files.length) payload.files = files;
         await navigator.share(payload);
         return;
+      } catch (error) {
+        if ((error as DOMException).name === "AbortError") return;
+      }
+
+      // Fallback: compartir flyer si el share de texto falló por otro motivo.
+      try {
+        const files = await getShareFiles(event);
+        if (files.length) {
+          await navigator.share({ files, title, text });
+          return;
+        }
       } catch (error) {
         if ((error as DOMException).name === "AbortError") return;
       }
@@ -93,6 +114,28 @@ function ShareModal({
         const next = await renderShareCard(event, flyer);
         if (cancelled) return;
         const url = URL.createObjectURL(next);
+
+        // Forzar decodificación/pintado antes de mostrar (evita preview “vacía” hasta un click).
+        const probe = new Image();
+        probe.src = url;
+        if (probe.decode) {
+          try {
+            await probe.decode();
+          } catch {
+            /* ignore */
+          }
+        } else {
+          await new Promise<void>((resolve) => {
+            probe.onload = () => resolve();
+            probe.onerror = () => resolve();
+          });
+        }
+
+        if (cancelled) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+
         revoked = url;
         setBlob(next);
         setPreview(url);
@@ -116,7 +159,7 @@ function ShareModal({
   }
 
   async function copyText() {
-    const body = `${event.title}\n${event.description}\n${formatShareDate(event.startsAt, event.location)}\n${eventPermalink(event.id)}`;
+    const body = shareMessage(event, eventPermalink(event.id));
     await navigator.clipboard.writeText(body);
     toast("Texto copiado — pegalo donde quieras compartirlo");
   }
@@ -139,10 +182,13 @@ function ShareModal({
         onClick={(e) => e.stopPropagation()}
       >
         <h3 id="share-title">Compartir evento</h3>
-        <p className="hint">Descargá la tarjeta, copiá el enlace o el texto para mandarlo por WhatsApp u otra red.</p>
+        <p className="hint">
+          Descargá la tarjeta o copiá el enlace. En WhatsApp, el enlace muestra título, fecha e imagen
+          del evento.
+        </p>
         <div className="share-preview">
           {preview ? (
-            <img src={preview} alt={`Tarjeta de ${event.title}`} />
+            <img src={preview} alt={`Tarjeta de ${event.title}`} width={1080} height={1350} />
           ) : (
             <div className="detail-placeholder">{busy ? "Armando tarjeta…" : "Sin vista previa"}</div>
           )}

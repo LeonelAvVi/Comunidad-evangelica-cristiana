@@ -1,119 +1,68 @@
-"use client";
-
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { EventCard } from "@/components/EventCard";
-import { ShareButton } from "@/components/ShareButton";
-import { getEventById, upcomingEvents } from "@/lib/events";
-import { useEvents } from "@/lib/events-context";
+import type { Metadata } from "next";
+import { EventDetailClient } from "./EventDetailClient";
+import { getEventByIdServer, siteOrigin } from "@/lib/events-server";
 import { formatEventMeta, formatLongDate } from "@/lib/format";
 import { SECTORS } from "@/lib/sectors";
-import type { ChurchEvent } from "@/lib/types";
 
-export default function EventDetailPage() {
-  const params = useParams<{ id: string }>();
-  const { events, loading } = useEvents();
-  const fromList = events.find((item) => item.id === params.id) ?? null;
-  const [fetched, setFetched] = useState<ChurchEvent | null>(null);
-  const [missing, setMissing] = useState(false);
+type Props = { params: Promise<{ id: string }> };
 
-  useEffect(() => {
-    if (fromList) {
-      setMissing(false);
-      return;
-    }
-    if (loading) return;
-    let cancelled = false;
-    void getEventById(params.id).then((found) => {
-      if (cancelled) return;
-      if (found) setFetched(found);
-      else setMissing(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [fromList, loading, params.id]);
-
-  const event = fromList ?? fetched;
-
-  if (missing) {
-    return (
-      <section>
-        <div className="wrap">
-          <h1>Evento no encontrado</h1>
-          <p className="lead" style={{ marginTop: 16 }}>
-            Puede que ya haya pasado o que el enlace esté desactualizado.
-          </p>
-          <p style={{ marginTop: 24 }}>
-            <Link href="/#eventos" className="btn btn-primary">
-              Ver agenda
-            </Link>
-          </p>
-        </div>
-      </section>
-    );
-  }
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const event = await getEventByIdServer(id);
+  const origin = siteOrigin();
 
   if (!event) {
-    return (
-      <section>
-        <div className="wrap">
-          <p>Cargando evento…</p>
-        </div>
-      </section>
-    );
+    return {
+      title: "Evento",
+      description: "Evento de Comunidad Cristiana — Sucre",
+    };
   }
 
   const sector = SECTORS[event.sector];
-  const related = upcomingEvents(events, event.sector)
-    .filter((item) => item.id !== event.id)
-    .slice(0, 3);
+  const when = formatLongDate(event.startsAt);
+  const meta = formatEventMeta(event.startsAt, event.location);
+  const description = `${when} · ${meta}. ${event.description}`.slice(0, 200);
+  const title = `${event.title} · ${sector.name}`;
+  const url = `${origin}/eventos/${event.id}`;
 
-  return (
-    <section>
-      <div className="wrap">
-        <p className="eyebrow" style={{ color: sector.color }}>
-          {sector.name}
-        </p>
-        <h1 style={{ marginTop: 12, fontSize: "clamp(32px, 4vw, 48px)" }}>{event.title}</h1>
-        <p style={{ marginTop: 12, color: "var(--ink-soft)" }}>
-          {formatLongDate(event.startsAt)} · {formatEventMeta(event.startsAt, event.location)}
-        </p>
-        <div className="detail-layout" style={{ marginTop: 32 }}>
-          <div className="detail-flyer">
-            {event.imageUrl ? (
-              <img src={event.imageUrl} alt={`Flyer de ${event.title}`} />
-            ) : (
-              <div className="detail-placeholder">Sin flyer cargado</div>
-            )}
-          </div>
-          <div>
-            <p style={{ fontSize: 17, lineHeight: 1.65, color: "var(--ink-soft)" }}>{event.description}</p>
-            <p style={{ marginTop: 18 }}>
-              <Link href={`/sectores/${sector.slug}`} style={{ fontWeight: 600, color: sector.color }}>
-                Ver más de {sector.name} →
-              </Link>
-            </p>
-            <div style={{ marginTop: 24 }}>
-              <ShareButton event={event} />
-            </div>
-          </div>
-        </div>
-        {related.length > 0 ? (
-          <>
-            <div className="sec-head">
-              <span className="eyebrow">También</span>
-              <h2>Otros eventos de {sector.name}</h2>
-            </div>
-            <div className="events-grid">
-              {related.map((item) => (
-                <EventCard key={item.id} event={item} />
-              ))}
-            </div>
-          </>
-        ) : null}
-      </div>
-    </section>
-  );
+  return {
+    title: event.title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      url,
+      title,
+      description,
+      siteName: "Comunidad Cristiana",
+      locale: "es_BO",
+      images: event.imageUrl
+        ? [
+            {
+              url: event.imageUrl,
+              width: 1200,
+              height: 630,
+              alt: event.title,
+            },
+          ]
+        : [
+            {
+              url: `${origin}/logo-comunidad-cristiana.jpg`,
+              width: 512,
+              height: 512,
+              alt: "Comunidad Cristiana",
+            },
+          ],
+    },
+    twitter: {
+      card: event.imageUrl ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: event.imageUrl ? [event.imageUrl] : [`${origin}/logo-comunidad-cristiana.jpg`],
+    },
+  };
+}
+
+export default function EventDetailPage() {
+  return <EventDetailClient />;
 }

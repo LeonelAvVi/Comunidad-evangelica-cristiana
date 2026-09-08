@@ -68,13 +68,28 @@ function drawRainbow(ctx: CanvasRenderingContext2D, x: number, y: number) {
   });
 }
 
+async function resolveFonts() {
+  const root = getComputedStyle(document.documentElement);
+  const serif = root.getPropertyValue("--font-fraunces").trim() || "Fraunces";
+  const sans = root.getPropertyValue("--font-inter").trim() || "Inter";
+  const mono = root.getPropertyValue("--font-plex").trim() || "IBM Plex Mono";
+
+  await Promise.all([
+    document.fonts.load(`700 64px ${serif}`),
+    document.fonts.load(`600 28px ${mono}`),
+    document.fonts.load(`500 30px ${sans}`),
+    document.fonts.load(`400 28px ${sans}`),
+  ]);
+  await document.fonts.ready;
+
+  return { serif, sans, mono };
+}
+
 export async function renderShareCard(
   event: ChurchEvent,
   flyer?: HTMLImageElement | null,
 ): Promise<Blob> {
-  if (typeof document !== "undefined") {
-    await document.fonts.ready;
-  }
+  const fonts = await resolveFonts();
 
   const canvas = document.createElement("canvas");
   canvas.width = W;
@@ -121,30 +136,30 @@ export async function renderShareCard(
   }
 
   ctx.fillStyle = sector.color;
-  ctx.font = "600 28px 'IBM Plex Mono', monospace";
+  ctx.font = `600 28px ${fonts.mono}, monospace`;
   ctx.fillText(sector.name.toUpperCase(), 88, cursorY);
 
   cursorY += 64;
   ctx.fillStyle = "#175A82";
-  ctx.font = "700 64px Fraunces, serif";
+  ctx.font = `700 64px ${fonts.serif}, serif`;
   cursorY += wrapText(ctx, event.title, 88, cursorY, W - 176, 72, 3);
 
   cursorY += 36;
   ctx.fillStyle = "#54524C";
-  ctx.font = "500 30px Inter, sans-serif";
+  ctx.font = `500 30px ${fonts.sans}, sans-serif`;
   wrapText(ctx, formatEventMeta(event.startsAt, event.location), 88, cursorY, W - 176, 40, 2);
 
   cursorY += 100;
   ctx.fillStyle = "#54524C";
-  ctx.font = "400 28px Inter, sans-serif";
+  ctx.font = `400 28px ${fonts.sans}, sans-serif`;
   wrapText(ctx, event.description, 88, cursorY, W - 176, 40, 5);
 
   ctx.fillStyle = "#175A82";
-  ctx.font = "700 28px Fraunces, serif";
+  ctx.font = `700 28px ${fonts.serif}, serif`;
   ctx.fillText("Comunidad Cristiana · Sucre", 88, H - 88);
 
   ctx.fillStyle = "#2E8FC4";
-  ctx.font = "500 22px 'IBM Plex Mono', monospace";
+  ctx.font = `500 22px ${fonts.mono}, monospace`;
   ctx.fillText(formatTime(event.startsAt), W - 88 - ctx.measureText(formatTime(event.startsAt)).width, H - 88);
 
   return new Promise((resolve, reject) => {
